@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import Persons from './components/Persons'
 import PersonForm from './components/PersonForm'
+import Notification from './components/Notification'
 import personService from './services/personService'
 
 
@@ -11,6 +12,7 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [newFilter, setNewFilter] = useState('')
+  const [message, setMessage] = useState(null)
 
   useEffect( () => {
     personService.getPersons()
@@ -35,18 +37,23 @@ const App = () => {
       }else {
         if( window.confirm(`wan't to update number ?`) ) {
           const person = persons.find(per => per.name.toLowerCase() === newName.toLowerCase() )
-          console.log(`Mika perso löyty ja mikä id updatee: ${JSON.stringify(person)}`)
           const newPerson = { id: person.id, name: person.name, number: newPhone }
-          console.log(`newperson: ${JSON.stringify(newPerson)}`)
           personService.updatePerson(person.id, newPerson )
           .then(updated => setPersons(persons.map(per => per.id !== updated.id ? per : updated)))
+          .catch(error => {
+            setMessage(`deleted already: ${error.message}`)
+            setPersons(persons.filter(per => per.id !== person.id))
+          })
+          setMessage(`Updated number for ${person.name}`)
         }    
       }
   
     }else {
       personService.addPerson({ name: newName, number: newPhone })
-      .then(resp => setPersons([ ...persons, resp ] ))
-      console.log(`after adding per: ${persons}`)
+      .then(resp => {
+        setPersons(persons.concat(resp)) 
+        setMessage(`Person added ${resp.name}`)
+      })
     } 
     setNewPhone('')
     setNewName('')
@@ -58,17 +65,22 @@ const App = () => {
   }
 
   const handleDel = (id) => {
-    if( window.confirm(`Delete ${persons.filter(per => per.id === id).map(per=>per.name)} ?`) ) {
+    const person = persons.filter(per => per.id === id).map(per=>per.name)
+    if( window.confirm(`Delete ${person} ?`) ) {
     personService.delPerson(id)
     .then( (resp) => {
-        console.log(`del pois listalta`)
         setPersons(persons.filter(per => per.id !== id))
-      })
+      }).catch(error => {
+          setMessage(`already deleted ${error.message}`)
+          setPersons(persons.filter(per => per.id !== id))
+        })
+    setMessage(` Person ${person} deleted`)
     }
   }
 
   return (
     <div>
+      <Notification message={message} setMessage={setMessage} />
       <h2>Phonebook</h2>
       <Filter handleFilter={handleFilter} newFilter={newFilter} />
       

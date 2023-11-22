@@ -1,5 +1,4 @@
 const Persons = ({persons, newFilter, handleDel}) => {
-  console.log(`What gets to Persons: ${JSON.stringify(persons)}`)
   return( <>
     <ul>
       { persons.filter( (per) => per.name.toLowerCase().includes(newFilter.toLowerCase() ))
