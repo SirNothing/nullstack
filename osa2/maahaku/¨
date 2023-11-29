@@ -1,0 +1,26 @@
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+
+const App = () => {
+
+  const [ search, setSearch ] = useState('')
+  const [ countries, setCountries ] = useState([])
+  
+  useEffect( () => {
+    const request = axios.get('https://studies.cs.helsinki.fi/restcountries/api/all')
+    request.then(resp => resp.data)
+    request.then(data => setCountries(JSON.parse(data) ))
+      .catch(error => console.log(error.message))
+  }, [])
+
+  return( <>
+    <h1> Countries of the free world... </h1>
+    <p> countries[0].name.common </p>
+    <input onChange={(e) => setSearch(e.target.value)} value={search} name="search" />
+    <ul>
+    { countries.map((country, i) => <li key={i}> {country.name.common} </li> ) }
+    </ul>
+  </> )
+}
+
+export default App
