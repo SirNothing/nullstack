@@ -1,6 +1,8 @@
 const express = require('express')
 let morgan = require('morgan')
 const cors = require('cors')
+const Phone = require('./models/phone')
+const errorHandler = require('./utils/errorHandler')
 
 const app = new express()
 
@@ -17,75 +19,63 @@ morgan.token('extra', (req, res) => {
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :extra'))
 
-let listPerson = [
-  {
-    id: 1,
-    name: "Kalle",
-    number: "231312421"
-  },
-  {
-    id: 2,
-    name: "Hullu nullu",
-    number: "3213211"
-  },
-  {
-    id: 3,
-    name: "Matruusi von",
-    number: "231321"
-  },
-  {
-    id: 4,
-    name: "Kulkuri k",
-    number: "32131"
-  }
-]
 
-app.get(`/info`, (req, res) => {
+app.get(`/info`, (req, res, next) => {
   const date = new Date()
-  res.send(`<html><header></header><body><p> Phonebook has ${listPerson.length} entries <br/> ${date.toString()}`)
+  Phone.find({}).then(result => {
+    res.send(`<html><header></header><body><p> Phonebook has ${result.length} entries <br /> ${date.toString()}`)
+  }).catch(error => next(error))
 })
-app.get("/api/persons", ( request, response ) => {
-  response.send(listPerson)
+app.get("/api/persons", ( request, response, next) => {
+  Phone.find({}).then(result => {
+    response.json(result)
+  }).catch(error => next(error))
 })
 
-app.get("/api/persons/:id", (req, res) => {
+app.get("/api/persons/:id", (req, res, next) => {
   console.log(`ID tuli: ${req.params.id}`)
   const id = req.params.id
-  const person = listPerson.filter(per => per.id === Number(id))
-  console.log(`Kuka löyty: ${JSON.stringify(person)}`)
-  if( person[0]) {
-    res.send(person).status(201)
-  }else {
-    res.status(404).send({message: "Could not find person"})
-  }
+  Phone.findById(id).then( result => {
+    res.json(result)
+  }).catch(error => next(error))
 })
 
-app.delete("/api/persons/:id", (req, res) => {
+app.delete("/api/persons/:id", (req, res, next) => {
   const id = req.params.id
   console.log(`Mika del ID: ${id}`)
-  const delPerson = listPerson.filter(per => per.id === Number(id))
-  console.log(`mika del person: ${JSON.stringify(delPerson)}`)
-  if( delPerson[0] ) {
-    listPerson = listPerson.filter(per => per.id !== Number(id))
-    console.log(`Mitä jäi listalle dellin jälk: ${JSON.stringify(listPerson)}`)
-    res.send(delPerson)
-  }else {
-    res.status(404).send({message: "No person to delete found"})
-  }
+  Phone.findByIdAndDelete(id).then(result => {
+    res.status(204).end()
+  }).catch(error => {
+      next(error)
+    })
 })
 
-app.post(`/api/persons`, (req, res) => {
+app.post(`/api/persons`, (req, res, next) => {
   const addPerson = req.body
   console.log(`Mitä Lisätään: ${JSON.stringify(addPerson)}`)
-  const newId = Math.floor(Math.random() * 10000)
-  if( listPerson.filter(per => per.name === addPerson.name).length === 0 && addPerson.name && addPerson.number ) {
-    listPerson = [ ...listPerson, {...addPerson, id: newId} ]
-    res.send(addPerson)
-  }else {
-    res.status(404).send({message: "Could not add person" })
-  }
+  newPerson = new Phone({
+    name: addPerson.name,
+    number: addPerson.number,
+  })
+  newPerson.save({runValidator: true, context: 'query'}).then(result => {
+    console.log(`Added ${result} to database`)
+    res.json(result)
+  }).catch(error => next(error))
 })
 
+app.put('/api/persons/:id', (req, res, next) => {
+  const body = req.body
+  const updatePhone = {
+    name: body.name,
+    number: body.number
+  }
+  Phone.findByIdAndUpdate(req.params.id, updatePhone, { new: true} )
+    .then(result => {
+      res.json(result)
+    }).catch(error => next(error))
+})
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 
