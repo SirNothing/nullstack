@@ -1,5 +1,5 @@
 const express = require('express')
-let morgan = require('morgan')
+const morgan = require('morgan')
 const cors = require('cors')
 const Phone = require('./models/phone')
 const errorHandler = require('./utils/errorHandler')
@@ -11,68 +11,68 @@ app.use(express.json())
 
 app.use(express.static('dist'))
 
-morgan.token('extra', (req, res) => {
-  if( req.method === 'POST') {
+morgan.token('extra', (req) => {
+  if (req.method === 'POST') {
     return JSON.stringify(req.body)
   }
+  return null
 })
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :extra'))
 
-
-app.get(`/info`, (req, res, next) => {
+app.get('/info', (req, res, next) => {
   const date = new Date()
-  Phone.find({}).then(result => {
+  Phone.find({}).then((result) => {
     res.send(`<html><header></header><body><p> Phonebook has ${result.length} entries <br /> ${date.toString()}`)
-  }).catch(error => next(error))
+  }).catch((error) => next(error))
 })
-app.get("/api/persons", ( request, response, next) => {
-  Phone.find({}).then(result => {
+app.get('/api/persons', (request, response, next) => {
+  Phone.find({}).then((result) => {
     response.json(result)
-  }).catch(error => next(error))
+  }).catch((error) => next(error))
 })
 
-app.get("/api/persons/:id", (req, res, next) => {
+app.get('/api/persons/:id', (req, res, next) => {
   console.log(`ID tuli: ${req.params.id}`)
-  const id = req.params.id
-  Phone.findById(id).then( result => {
+  const { id } = req.params
+  Phone.findById(id).then((result) => {
     res.json(result)
-  }).catch(error => next(error))
+  }).catch((error) => next(error))
 })
 
-app.delete("/api/persons/:id", (req, res, next) => {
-  const id = req.params.id
+app.delete('/api/persons/:id', (req, res, next) => {
+  const { id } = req.params
   console.log(`Mika del ID: ${id}`)
-  Phone.findByIdAndDelete(id).then(result => {
+  Phone.findByIdAndDelete(id).then(() => {
     res.status(204).end()
-  }).catch(error => {
-      next(error)
-    })
+  }).catch((error) => {
+    next(error)
+  })
 })
 
-app.post(`/api/persons`, (req, res, next) => {
+app.post('/api/persons', (req, res, next) => {
   const addPerson = req.body
   console.log(`Mitä Lisätään: ${JSON.stringify(addPerson)}`)
-  newPerson = new Phone({
+  const newPerson = new Phone({
     name: addPerson.name,
     number: addPerson.number,
   })
-  newPerson.save({runValidator: true, context: 'query'}).then(result => {
+  newPerson.save({ runValidator: true, context: 'query' }).then((result) => {
     console.log(`Added ${result} to database`)
     res.json(result)
-  }).catch(error => next(error))
+  }).catch((error) => next(error))
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
-  const body = req.body
+  const { body } = req
   const updatePhone = {
     name: body.name,
-    number: body.number
+    number: body.number,
   }
-  Phone.findByIdAndUpdate(req.params.id, updatePhone, { new: true} )
-    .then(result => {
+  Phone.findByIdAndUpdate(req.params.id, updatePhone, { new: true })
+    .then((result) => {
       res.json(result)
-    }).catch(error => next(error))
+    }).catch((error) => next(error))
 })
 
 app.use(errorHandler)
