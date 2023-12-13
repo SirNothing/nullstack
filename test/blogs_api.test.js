@@ -44,7 +44,7 @@ const blogNoTitleUrl = [{title: undefined, author: "Who the foo", url: undefined
 
 beforeEach(async () => {
   await Blog.deleteMany({})
-  
+  console.log(`kannan alustus`)
   const addInits = initBlogs.map(blog => {
     return new Blog(blog)
   })
@@ -66,7 +66,8 @@ test('check id field', async () => {
 })
 
 test('adding blog to db', async () => {
-  const newBlog = await api.post('/api/blogs', {title: "new titled site", author: "newton newer", url: "http://www.newnewnew.com", likes: 3})
+  const newBlog = await api.post('/api/blogs')
+    .send({title: "new titled site", author: "newton newer", url: "http://www.newnewnew.com", likes: 3})
   const resp = await api.get('/api/blogs')
   expect(resp.body.length).toBe(initBlogs.length + 1)
 })
@@ -84,6 +85,25 @@ test('title or url without value', async () => {
   await api.post('/api/blogs')
     .send(blogNoTitleUrl)
     .expect(400)
+})
+
+test('deletin blog post', async () => {
+    const blogs = await api.get('/api/blogs')
+    expect(blogs)
+    const blogToDel = blogs[0]
+    await api.delete(`/api/blogs/blogs[0].id}`)
+      .expect(204)
+    const checkBlogs = await api.get('/api/blogs')
+    console.log(`check again: ${checkBlogs[0]}`)
+    expect(checkBlogs).not.toContain(blogToDel)
+})
+
+test('Updating blog likes', async () => {
+  const blogs = await api.get('/api/blogs')
+  console.log(`eka: ${JSON.stringify(blogs.body[0])}`)
+  const retuned = await api.put(`/api/blogs/${blogs.body[0].id}`)
+    .send({"likes": 43})
+  expect(retuned.body.likes).toBe(43)
 })
 
 afterAll(async () => {
