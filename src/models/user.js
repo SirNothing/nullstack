@@ -10,6 +10,12 @@ const userSchema = mongoose.Schema({
     
   },
   name: String,
+  blogs: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Blog'
+    }
+  ],
   password: {
     type: String,
     required: true,
@@ -25,6 +31,7 @@ userSchema.set('toJSON', {
     returnedObject.id = returnedObject._id.toString()
     delete returnedObject._id
     delete returnedObject.__v
+    delete returnedObject.password
   }
 })
 

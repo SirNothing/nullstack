@@ -1,30 +1,41 @@
 const blogRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 
 
 blogRouter.get('/', (request, response) => {
   Blog
-    .find({})
+    .find({}).populate('user', { username: 1, name: 1 })
     .then(blogs => {
       response.json(blogs)
     })
 })
 
 blogRouter.post('/', async (request, response, next) => {
-  const blog = new Blog(request.body)
-  console.log`posted: ${JSON.stringify(blog)}`
+  const blog = request.body
+  const user = await User.findById(blog.user)
+  console.log(`posted: ${JSON.stringify(blog)}`)
+  console.log(`found user: ${user}`)
   if( blog.likes ) {
     try{
-      const result = await blog.save()
-      response.status(201).json(result.body)
+      saveBlog = new Blog({...blog, user: user._id})
+      const result = await saveBlog.save()
+      console.log(`haettu blog : ${result}`)
+      user.blogs = user.blogs.concat(result._id)
+      console.log(`Mika id blog: ${result._id}`)
+      await user.save()
+      response.status(201).json(result)
     }catch(error) {
       next(error)
     }
   }else {
     try {
-      const likeBlog = new Blog({...blog, likes: 0})
+      const likeBlog = new Blog({...blog, likes: 0, user: user._id})
       const saved = await likeBlog.save()
+      user.blogs = user.blogs.concat(saved._id)
+      await user.save()
+
       response.status(201).json(saved.body)
     }catch(error) {
       next(error)
