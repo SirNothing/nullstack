@@ -2,15 +2,16 @@ const supertest = require('supertest')
 const mongoose = require('mongoose')
 const app = require('../src/app')
 const Blog = require('../src/models/blog')
+const User = require('../src/models/user')
 
 const api = supertest(app)
 
 const initBlogs = [
   {
-  title: "Mene menninkäinen",
-  author: "Menni käinen",
-  url: "http://www.menninkäisiäeioleolemassa.com",
-  likes: 10 
+    title: "Mene menninkäinen",
+    author: "Menni käinen",
+    url: "http://www.menninkäisiäeioleolemassa.com",
+    likes: 10 
   },
   {
     title: "kipu luo tuskaa",
@@ -38,15 +39,27 @@ const initBlogs = [
   }
 ]
 
-const blogNoLike = [{title: "Ei tykkää, ku ei liketa", author: "Kukaan koskaan", url: "http://www.nopenope.com", likes: undefined}]
+const blogNoLike = {title: "Ei tykkää, ku ei liketa", author: "Kukaan koskaan", url: "http://www.nopenope.com", likes: null}
 
-const blogNoTitleUrl = [{title: undefined, author: "Who the foo", url: undefined, likes: 32}]
+const blogNoTitleUrl = {title: undefined, author: "Who the foo", url: undefined, likes: 32}
+
+const getLogin = async (user) => {
+  console.log(`userii: ${user}`)
+  let tok = await api.post('/api/login')
+    .send({username: user.username, password: 'Salapassu'})
+  console.log(`Tokeni haettu: ${tok.text}`)
+  tok = JSON.parse(tok.text)
+  const token = "Bearer ".concat(tok.token)
+  return token
+}
 
 beforeEach(async () => {
+  const useUser = await User.findOne({})
+  
   await Blog.deleteMany({})
   console.log(`kannan alustus`)
   const addInits = initBlogs.map(blog => {
-    return new Blog(blog)
+    return new Blog({...blog, user: useUser.id})
   })
   const promiseArr = addInits.map(blog => blog.save())
   await Promise.all(promiseArr)
@@ -66,15 +79,25 @@ test('check id field', async () => {
 })
 
 test('adding blog to db', async () => {
+  const user = await User.findOne({})
+  const token = await getLogin(user)
+  console.log(`tokeni addissa: ${token}`)
+
+  console.log(`Adding test token; ${JSON.stringify(token)}`)
+
   const newBlog = await api.post('/api/blogs')
+    .set({Authorization: token})
     .send({title: "new titled site", author: "newton newer", url: "http://www.newnewnew.com", likes: 3})
   const resp = await api.get('/api/blogs')
   expect(resp.body.length).toBe(initBlogs.length + 1)
 })
 
 test('likes without value', async () => {
+  const user = await User.findOne({})
+  const token = await getLogin(user)
   await api.post('/api/blogs')
     .send(blogNoLike)
+    .set({Authorization: token})
     .expect(201)
     .expect('Content-Type', /application\/json/)
   const resp = await api.get('/api/blogs')
@@ -82,20 +105,27 @@ test('likes without value', async () => {
 })
 
 test('title or url without value', async () => {
+  const user = await User.findOne({})
+  const token = await getLogin(user)
   await api.post('/api/blogs')
     .send(blogNoTitleUrl)
+    .set({Authorization: token})
     .expect(400)
 })
 
 test('deletin blog post', async () => {
-    const blogs = await api.get('/api/blogs')
-    expect(blogs)
-    const blogToDel = blogs[0]
-    await api.delete(`/api/blogs/blogs[0].id}`)
-      .expect(204)
-    const checkBlogs = await api.get('/api/blogs')
-    console.log(`check again: ${checkBlogs[0]}`)
-    expect(checkBlogs).not.toContain(blogToDel)
+  const user = await User.findOne({})
+  const token = await getLogin(user)
+  const blogs = await api.get('/api/blogs')
+  expect(blogs)
+  const blogToDel = JSON.parse(blogs.text)
+  console.log(`MIkä del: ${typeof blogToDel} `)
+  await api.delete(`/api/blogs/${blogToDel[0].id}`)
+    .set({Authorization: token})
+    .expect(204)
+  const checkBlogs = await api.get('/api/blogs')
+  console.log(`check again: ${checkBlogs[0]}`)
+  expect(checkBlogs).not.toContain(blogToDel)
 })
 
 test('Updating blog likes', async () => {
