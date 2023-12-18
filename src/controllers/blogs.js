@@ -14,13 +14,11 @@ blogRouter.get('/', (request, response) => {
 
 blogRouter.post('/', async (request, response, next) => {
   const blog = request.body
-  const authorization = request.token
-  console.log('auth: ${authorization}')
-  const decodeToken = jwt.verify(authorization, process.env.SECRET)
-  if( !decodeToken.id ) {
-    return response.status(401).json({ error: 'invalid token' })
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)
+  if( !decodedToken.id ) {
+    response.status(401).json({message: "invalid or no token" })
   }
-  const user = await User.findById(decodeToken.id)
+  const user = await User.findById(decodedToken.id)
 
   console.log(`posted: ${JSON.stringify(blog)}`)
   console.log(`found user: ${user}`)
