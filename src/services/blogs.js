@@ -23,4 +23,16 @@ export const addBlog = async (blog) => {
 
 }
 
-export default { getAll, addBlog }
+export const likeBlog = async(id, blog) => {
+  let token = window.localStorage.getItem('user')
+  token = JSON.parse(token)
+  token = `Bearer ${token.token}`
+  try {
+    const result = await axios.put(`${baseUrl}/${id}`, blog, { header: { Authorization: token }} )
+    return result.data
+  }catch(error) {
+    return { error: error.message }
+  }
+}
+
+export default { getAll, addBlog, likeBlog }

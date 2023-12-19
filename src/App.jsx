@@ -12,9 +12,23 @@ const App = () => {
   const [message, setMessage] = useState('')
   
   const createBlog = async(blog) => {
+    
     const response = await blogService.addBlog(blog)
     setBlogs(blogs.concat(response))
     setMessage(`blog created: ${response}`)
+    setTimeout(() => {
+      setMessage('')
+    }, 3000)
+
+  }
+
+  const likeBlog = async(id, blog) =>{
+    const respnse = await blogService.likeBlog(id, blog)
+    setBlogs(blogs.map(blo => blo.id !== respnse.id ? blo : respnse))
+    setMessage(`Liked blog: ${respnse.title}`)
+    setTimeout(() => {
+      setMessage('')
+    }, 3000)
   }
 
   useEffect(() => {
@@ -38,7 +52,7 @@ const App = () => {
           </Togglable>
           <h2>blogs</h2>
             {blogs.map(blog =>
-              <Blog key={blog.id} blog={blog} />
+              <Blog key={blog.id} blog={blog} likeBlog={likeBlog} />
             )}
           </span>
         : null }
