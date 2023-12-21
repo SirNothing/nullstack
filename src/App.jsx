@@ -10,9 +10,9 @@ const App = () => {
   const [blogs, setBlogs] = useState([])
   const [user, setUser] = useState(null)
   const [message, setMessage] = useState('')
-  
+
   const createBlog = async(blog) => {
-    
+
     const response = await blogService.addBlog(blog)
     setBlogs(blogs.concat(response))
     setMessage(`blog created: ${response}`)
@@ -22,8 +22,14 @@ const App = () => {
 
   }
 
-  const likeBlog = async(id, blog) =>{
-    const respnse = await blogService.likeBlog(id, blog)
+  const likeBlog = async(id, blog) => {
+    const updateBlog = {
+      title: blog.title,
+      author: blog.author,
+      url: blog.url,
+      likes: blog.likes + 1
+    }
+    const respnse = await blogService.likeBlog(id, updateBlog)
     setBlogs(blogs.map(blo => blo.id !== respnse.id ? blo : respnse))
     setMessage(`Liked blog: ${respnse.title}`)
     setTimeout(() => {
@@ -31,8 +37,24 @@ const App = () => {
     }, 3000)
   }
 
+  const delBlog = async(id) => {
+    const result = await blogService.delBlog(id)
+    if( result.error ) {
+      setMessage('Wrong user')
+      setTimeout(() => {
+        setMessage('')
+      }, 3000)
+      return null
+    }
+    setBlogs(blogs.filter(blo => blo.id !== id))
+    setMessage('Blog deleted..')
+    setTimeout(() => {
+      setMessage('')
+    }, 3000)
+  }
+
   useEffect(() => {
-    setUser(window.localStorage.getItem('user'))
+    setUser(JSON.parse(window.localStorage.getItem('user')) )
     const getBlogs = async () => {
       const blogs = await blogService.getAll()
       console.log(`typeod blogs: ${typeof blogs} ${JSON.stringify(blogs)}`)
@@ -51,10 +73,10 @@ const App = () => {
             <BlogForm createBlog={createBlog} setMessage={setMessage} />
           </Togglable>
           <h2>blogs</h2>
-            {blogs.map(blog =>
-              <Blog key={blog.id} blog={blog} likeBlog={likeBlog} />
-            )}
-          </span>
+          {blogs.sort((a, b) => b.likes - a.likes).map(blog =>
+            <Blog key={blog.id} blog={blog} likeBlog={likeBlog} delBlog={delBlog} />
+          )}
+        </span>
         : null }
     </div>
   )

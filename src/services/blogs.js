@@ -13,12 +13,12 @@ export const addBlog = async (blog) => {
   token = `Bearer ${token.token}`
   console.log(`Tokeni haettu: ${token}`)
   try {
-    const request = await axios.post(baseUrl, blog, {headers: {Authorization: token } })
+    const request = await axios.post(baseUrl, blog, { headers: { Authorization: token } })
     console.log(`addBlog resp: ${JSON.stringify(request.data)}`)
     return request.data
   }catch(error) {
     console.log(`error: ${error.message}`)
-    return {error: error.message }
+    return { error: error.message }
   }
 
 }
@@ -28,11 +28,23 @@ export const likeBlog = async(id, blog) => {
   token = JSON.parse(token)
   token = `Bearer ${token.token}`
   try {
-    const result = await axios.put(`${baseUrl}/${id}`, blog, { header: { Authorization: token }} )
+    const result = await axios.put(`${baseUrl}/${id}`, blog, { headers: { Authorization: token } } )
     return result.data
   }catch(error) {
     return { error: error.message }
   }
 }
 
-export default { getAll, addBlog, likeBlog }
+export const delBlog = async(id) => {
+  let token = window.localStorage.getItem('user')
+  token = JSON.parse(token)
+  token = `Bearer ${token.token}`
+  try {
+    const result = await axios.delete(`${baseUrl}/${id}`,{ headers: { Authorization: token } } )
+    return result.data
+  }catch(error) {
+    return { error: error.message }
+  }
+}
+
+export default { getAll, addBlog, likeBlog, delBlog }

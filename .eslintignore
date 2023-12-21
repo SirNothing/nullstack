@@ -1,0 +1,7 @@
+node_modules
+.eslintrc.cjs
+dist
+build
+.git
+.gitignore
+vite.config.js

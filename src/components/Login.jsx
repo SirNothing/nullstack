@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import loginService from '../services/login'
 
-const Login = ( {user, setUser, setMessage} ) => {
-  console.log(`Came to Login comp.`)
-  const [ username, setUsername ] = useState("")
-  const [ password, setPassword ] = useState("")
-  
+const Login = ( { user, setUser, setMessage } ) => {
+  console.log('Came to Login comp.')
+  const [ username, setUsername ] = useState('')
+  const [ password, setPassword ] = useState('')
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
@@ -30,8 +30,8 @@ const Login = ( {user, setUser, setMessage} ) => {
         setMessage('')
       },3000)
     }
-    setUsername("")
-    setPassword("")
+    setUsername('')
+    setPassword('')
   }
   const handleLogout = (e) => {
     e.preventDefault()
@@ -41,16 +41,16 @@ const Login = ( {user, setUser, setMessage} ) => {
 
   }
   if( user ) {
-    return( <> ${user.username} is logged in...<button type='button' onClick={handleLogout}> Logout </button> </> )
+    return( <> <b> {user.username} is logged in...</b> <button type='button' onClick={handleLogout}> Logout </button> </> )
   }
-  return( <> 
+  return( <>
     <h2> Login to app.. </h2>
     <form onSubmit={handleSubmit}>
       <label>username
-      <input type='text' name='username' value={username} onChange={ (e) => setUsername(e.target.value) } />
+        <input type='text' name='username' value={username} onChange={ (e) => setUsername(e.target.value) } />
       </label>
       <label> password
-      <input type='password' name='password' value={password} onChange={ (e) => setPassword(e.target.value) } />
+        <input type='password' name='password' value={password} onChange={ (e) => setPassword(e.target.value) } />
       </label>
       <button type='submit'> Login </button>
     </form>
