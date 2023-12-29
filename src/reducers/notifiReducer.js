@@ -9,5 +9,15 @@ const notifiSlice = createSlice({
     },
   }
 })
+
 export const { message } = notifiSlice.actions
 export default notifiSlice.reducer
+
+export const setNotification = (content, time) => {
+  return async dispatch => {
+    dispatch(message(content))
+    setTimeout(() => {
+      dispatch(message(''))
+    }, (time * 1000))
+  }
+}
