@@ -13,7 +13,7 @@ const Togglable = (props) => {
 
   return( <>
     <div style={hideWhenVisible}>
-      <button onClick={handleVisible} type='button' name='show'> {props.buttonLabel} </button>
+      <button id='show' onClick={handleVisible} type='button' name='show'> {props.buttonLabel} </button>
     </div>
     <div style={showWhenVisible}>
       {props.children}

@@ -41,18 +41,18 @@ const Login = ( { user, setUser, setMessage } ) => {
 
   }
   if( user ) {
-    return( <> <b> {user.username} is logged in...</b> <button type='button' onClick={handleLogout}> Logout </button> </> )
+    return( <> <b> {user.username} is logged in...</b> <button id='logout' type='button' onClick={handleLogout}> Logout </button> </> )
   }
   return( <>
     <h2> Login to app.. </h2>
     <form onSubmit={handleSubmit}>
       <label>username
-        <input type='text' name='username' value={username} onChange={ (e) => setUsername(e.target.value) } />
+        <input type='text' id='username' name='username' value={username} onChange={ (e) => setUsername(e.target.value) } />
       </label>
       <label> password
-        <input type='password' name='password' value={password} onChange={ (e) => setPassword(e.target.value) } />
+        <input id='password' type='password' name='password' value={password} onChange={ (e) => setPassword(e.target.value) } />
       </label>
-      <button type='submit'> Login </button>
+      <button id='submit-button' type='submit'> Login </button>
     </form>
   </> )
 }
