@@ -4,12 +4,16 @@ const User = require('../models/user')
 const jwt = require('jsonwebtoken')
 
 
-blogRouter.get('/', (request, response) => {
-  Blog
-    .find({}).populate('user', { username: 1, name: 1 })
-    .then(blogs => {
-      response.json(blogs)
-    })
+blogRouter.get('/', (request, response, next) => {
+  try {
+    Blog
+      .find({}).populate('user', { username: 1, name: 1 })
+      .then(blogs => {
+        response.json(blogs)
+      })
+  }catch(error) {
+    next(error)
+  }
 })
 
 blogRouter.post('/', async (request, response, next) => {
@@ -24,8 +28,9 @@ blogRouter.post('/', async (request, response, next) => {
   console.log(`found user: ${user}`)
   if( blog.likes ) {
     try{
-      saveBlog = new Blog({...blog, user: user._id})
-      const result = await saveBlog.save()
+      let saveBlog = new Blog({...blog, user: user._id})
+      let result = await saveBlog.save()
+      result = await Blog.populate(saveBlog, { path: 'user' })
       console.log(`haettu blog : ${result}`)
       user.blogs = user.blogs.concat(result._id)
       console.log(`Mika id blog: ${result._id}`)
@@ -38,7 +43,8 @@ blogRouter.post('/', async (request, response, next) => {
     try {
       console.log(`blog post no likes ${blog}`)
       const likeBlog = new Blog({...blog, likes: 0, user: user._id})
-      const saved = await likeBlog.save()
+      let saved = await likeBlog.save()
+      saved = await Blog.populate(likeBlog, { path: 'user' })
       user.blogs = user.blogs.concat(saved._id)
       await user.save()
       response.status(201).json(saved)
@@ -50,7 +56,7 @@ blogRouter.post('/', async (request, response, next) => {
 
 blogRouter.delete('/:id', async (req, resp, next) => {
   const token = req.token
-  const decodedToken = await jwt.verify(token, process.env.SECRET)
+  const decodedToken = jwt.verify(token, process.env.SECRET)
   if( !decodedToken.id ) {
     return resp.status(401).json({ error: 'Cant verify token'})
   }
@@ -58,9 +64,11 @@ blogRouter.delete('/:id', async (req, resp, next) => {
   try {
     const toDelete = req.params.id
     const blog = await Blog.findById(toDelete)
-    if( blog.user.toString() === user._id.toString() ) {
+    if( blog.user._id.toString() === user._id.toString() ) {
       await Blog.findByIdAndDelete(toDelete)
       resp.status(204).end()
+    } else {
+      resp.status(400).send({ error: 'wrong user'})
     }
   }catch(error) {
     next(error)
@@ -72,7 +80,7 @@ blogRouter.put(`/:id`, async (req, res, next) => {
     console.log(`body put: ${JSON.stringify(req.body)}`)
     const updateBlog = await Blog.findById(req.params.id)
     const updated = { title: updateBlog.title, author: updateBlog.author, url: updateBlog.url, likes: req.body.likes }
-    const returne = await Blog.findByIdAndUpdate(req.params.id, updated, { new: true })
+    let returne = await Blog.findByIdAndUpdate(req.params.id, updated, { new: true }).populate('user')
     res.status(203).json(returne)
   }catch(error) { next(error) }
   
