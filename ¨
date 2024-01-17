@@ -13,9 +13,13 @@ const AnecdoteForm = () => {
     mutationFn: (content) => axios.post('http://localhost:3001/anecdotes', content).then(res => res.data),
     onSuccess: (status) => {
       queryClient.invalidateQueries({ queryKey: ['anecdotes'] })
+      console.log(`stattus: ${JSON.stringify(status)}`)
     },
-    onError: (error) => {
-      notidDispatch({ type: 'error', message: `${error.response.data.error}` })
+    onError: (error, variables, context) => {
+      notidDispatch({ type: 'error', message: `${JSON.stringify(error)}` })
+      console.log(JSON.stringify(context.message))
+      console.log(JSON.stringify(variables))
+      console.log(JSON.stringify(error))
     },
   })
 
@@ -24,7 +28,7 @@ const AnecdoteForm = () => {
     const content = event.target.anecdote.value
     event.target.anecdote.value = ''
     console.log('new anecdote')
-    newMutation.mutateAsync({ content: content, votes: 0 })
+    newMutation.mutate({ content: content, votes: 0 })
     notidDispatch({ type: 'anecdote' , message: content })
   }
 

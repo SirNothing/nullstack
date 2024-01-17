@@ -2,9 +2,12 @@ import AnecdoteForm from './components/AnecdoteForm'
 import Notification from './components/Notification'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
+import { useContext } from 'react'
+import NotifContext from './notifContext'
 
 const App = () => {
 
+  const [ notif, notifDispatch ] = useContext(NotifContext)
   const queryClient = useQueryClient()
   const updateMutation = useMutation({
     mutationFn: (update) => axios.put(`http://localhost:3001/anecdotes/${update.id}`, update).then(res => res.data),
@@ -17,6 +20,7 @@ const App = () => {
     console.log(`vote for: ${JSON.stringify(anecdote)}`)
     const newAnecdote = {...anecdote, votes: anecdote.votes + 1}
     updateMutation.mutate(newAnecdote)
+    notifDispatch({type: 'vote', message: anecdote.content})
   }
 
 

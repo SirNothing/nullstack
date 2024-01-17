@@ -1,4 +1,11 @@
+import { useReducer } from 'react'
+import { useContext } from 'react'
+import NotifContext from '../notifContext'
+
+
 const Notification = () => {
+const [ notif, notifDispatch] = useContext(NotifContext)
+
   const style = {
     border: 'solid',
     padding: 10,
@@ -6,11 +13,17 @@ const Notification = () => {
     marginBottom: 5
   }
   
-  if (true) return null
+  if (notif !== '') {
+    setTimeout(() => {
+      notifDispatch({type: 'reset'})
+    }, 5000)
+  }else {
+    return null
+  } 
 
   return (
     <div style={style}>
-      
+      {notif}
     </div>
   )
 }
